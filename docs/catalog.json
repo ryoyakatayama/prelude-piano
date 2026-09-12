@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "tracks": [
+    {
+      "id": "joy",
+      "title": "よろこびの歌",
+      "composer": "L. van Beethoven",
+      "tempo": 88,
+      "measures": 16,
+      "bytes": 19311,
+      "file": "./tracks/joy.piano.json",
+      "revision": "9ef2eb4316b8"
+    },
+    {
+      "id": "scale",
+      "title": "ハ長調のウォームアップ",
+      "composer": "Prélude オリジナル練習曲",
+      "tempo": 72,
+      "measures": 8,
+      "bytes": 9621,
+      "file": "./tracks/scale.piano.json",
+      "revision": "742c9b883caf"
+    }
+  ]
+}

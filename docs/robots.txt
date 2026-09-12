@@ -1,0 +1,3 @@
+# Project Pages cannot set github.io's root robots.txt. The HTML noindex directive is authoritative.
+User-agent: *
+Disallow: /
