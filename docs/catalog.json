@@ -16,6 +16,19 @@
       "revision": "e5649a389bb3"
     },
     {
+      "id": "merry-christmas-mr-lawrence",
+      "title": "Merry Christmas Mr. Lawrence",
+      "composer": "坂本龍一",
+      "tempo": 84,
+      "measures": 94,
+      "bytes": 10369602,
+      "audioBytes": 17166326,
+      "file": "./tracks/merry-christmas-mr-lawrence.piano.enc.json",
+      "audioFile": "./tracks/merry-christmas-mr-lawrence.wav.enc.json",
+      "encrypted": true,
+      "revision": "cdde327b452a"
+    },
+    {
       "id": "scale",
       "title": "ハ長調のウォームアップ",
       "composer": "Prélude オリジナル練習曲",
@@ -27,6 +40,19 @@
       "audioFile": "./tracks/scale.wav.enc.json",
       "encrypted": true,
       "revision": "d0944bb9894a"
+    },
+    {
+      "id": "summer",
+      "title": "Summer",
+      "composer": "久石譲",
+      "tempo": 80,
+      "measures": 131,
+      "bytes": 14093669,
+      "audioBytes": 22874081,
+      "file": "./tracks/summer.piano.enc.json",
+      "audioFile": "./tracks/summer.wav.enc.json",
+      "encrypted": true,
+      "revision": "ae1c74808d05"
     }
   ]
 }
