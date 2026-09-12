@@ -21,12 +21,12 @@
       "composer": "坂本龍一",
       "tempo": 84,
       "measures": 94,
-      "bytes": 10369602,
+      "bytes": 10370458,
       "audioBytes": 17166326,
       "file": "./tracks/merry-christmas-mr-lawrence.piano.enc.json",
       "audioFile": "./tracks/merry-christmas-mr-lawrence.wav.enc.json",
       "encrypted": true,
-      "revision": "cdde327b452a"
+      "revision": "460dbeaf166b"
     },
     {
       "id": "scale",
@@ -47,12 +47,12 @@
       "composer": "久石譲",
       "tempo": 80,
       "measures": 131,
-      "bytes": 14093669,
+      "bytes": 14095493,
       "audioBytes": 22874081,
       "file": "./tracks/summer.piano.enc.json",
       "audioFile": "./tracks/summer.wav.enc.json",
       "encrypted": true,
-      "revision": "ae1c74808d05"
+      "revision": "28e94d687621"
     }
   ]
 }

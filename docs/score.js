@@ -13,10 +13,12 @@ export function durationStyle(duration){
     if(near(duration,base*1.5))return {base,dotted:true,tuplet:false,flags:Math.max(0,Math.round(Math.log2(1/base)))};
   }
   for(const base of [4,2,1,.5,.25,.125])if(near(duration,base*2/3))return {base,dotted:false,tuplet:true,flags:Math.max(0,Math.round(Math.log2(1/base)))};
-  const base=2**Math.floor(Math.log2(duration));return {base,dotted:false,tuplet:false,flags:clamp(Math.round(Math.log2(1/base)),0,4)};
+  return {base:1,dotted:false,tuplet:false,flags:0,unknown:true};
 }
+// Playback lengths and printed values differ for grace notes and tied notes.
+function engravedNotes(measure){return measure.notes.flatMap(n=>{const values=n.notation?.durations??[n.duration],total=values.reduce((a,b)=>a+b,0);let offset=0;return values.map((value,i)=>{const duration=n.duration*value/total,out={...n,id:i?`${n.id}-tie-${i}`:n.id,sourceId:n.id,beat:n.beat+offset,duration,notatedDuration:value,grace:n.notation?.grace===true,tieFrom:i>0,tieTo:i<values.length-1};offset+=duration;return out;});});}
 export function chordGroups(measure){
-  const map=new Map();for(const n of measure.notes){const key=[n.hand,n.beat.toFixed(6),n.duration.toFixed(6),n.voice??'',n.midi==null?'rest':'note'].join(':');if(!map.has(key))map.set(key,{hand:n.hand,beat:n.beat,duration:n.duration,notes:[],rest:n.midi==null,...durationStyle(n.duration)});map.get(key).notes.push(n);}
+  const map=new Map();for(const n of engravedNotes(measure)){const key=[n.hand,n.beat.toFixed(6),n.duration.toFixed(6),n.notatedDuration,n.grace,n.voice??'',n.midi==null?'rest':'note'].join(':');if(!map.has(key))map.set(key,{hand:n.hand,beat:n.beat,duration:n.duration,notes:[],rest:n.midi==null,grace:n.grace,...durationStyle(n.notatedDuration)});map.get(key).notes.push(n);}
   return [...map.values()].sort((a,b)=>a.beat-b.beat||mean(b.notes.map(n=>n.midi??0))-mean(a.notes.map(n=>n.midi??0)));
 }
 function columns(measure,groups,options){
@@ -27,14 +29,14 @@ function columns(measure,groups,options){
 function prepareHand(groups,hand,clef,flat,anchors){
   const list=groups.filter(g=>g.hand===hand).map(g=>({...g,notes:g.notes.map(n=>({...n,y:n.midi==null?20:yPitch(n.midi,clef,flat)})),x:anchors.find(a=>near(a[0],g.beat))[1]})),lanes=[];
   for(const g of list){let lane=lanes.findIndex(end=>end<=g.beat+.00001);if(lane<0)lane=lanes.length;lanes[lane]=g.beat+g.duration;g.lane=lane;}
-  for(const g of list){const ys=g.notes.map(n=>n.y);g.up=lanes.length>1?g.lane===0:mean(ys)>20;g.min=Math.min(...ys);g.max=Math.max(...ys);g.end=g.up?g.min-35:g.max+35;}
+  for(const g of list){const ys=g.notes.map(n=>n.y);g.up=g.grace?true:lanes.length>1?g.lane===0:mean(ys)>20;g.min=Math.min(...ys);g.max=Math.max(...ys);g.end=g.up?g.min-(g.grace?25:35):g.max+35;}
   // Never join across rests, different voices, or beat boundaries.
   const beamGroups=[];
-  for(let lane=0;lane<lanes.length;lane++){let run=[];const flush=()=>{if(run.length>1)beamGroups.push(run);run=[];};for(const g of list.filter(g=>g.lane===lane)){const prev=run.at(-1);if(g.rest||!g.flags){flush();continue;}if(prev&&(!near(prev.beat+prev.duration,g.beat)||Math.floor(prev.beat+.00001)!==Math.floor(g.beat+.00001)))flush();run.push(g);}flush();}
-  for(const run of beamGroups){const up=lanes.length>1?run[0].up:mean(run.flatMap(g=>g.notes.map(n=>n.y)))>20,end=up?Math.min(...run.map(g=>g.min))-35:Math.max(...run.map(g=>g.max))+35;for(const g of run){g.up=up;g.end=end;g.beamed=true;}}
+  for(let lane=0;lane<lanes.length;lane++){let run=[];const flush=()=>{if(run.length>1)beamGroups.push(run);run=[];};for(const g of list.filter(g=>g.lane===lane)){const prev=run.at(-1);if(g.rest||!g.flags){flush();continue;}if(prev&&(prev.grace!==g.grace||!near(prev.beat+prev.duration,g.beat)||Math.floor(prev.beat+.00001)!==Math.floor(g.beat+.00001)))flush();run.push(g);}flush();}
+  for(const run of beamGroups){const up=run[0].grace?true:lanes.length>1?run[0].up:mean(run.flatMap(g=>g.notes.map(n=>n.y)))>20,end=up?Math.min(...run.map(g=>g.min))-(run[0].grace?25:35):Math.max(...run.map(g=>g.max))+35;for(const g of run){g.up=up;g.end=end;g.beamed=true;}}
   const alterations=new Map();
   for(const g of list){
-    const ordered=[...g.notes].sort((a,b)=>g.up?b.y-a.y:a.y-b.y);let previous=null;for(const n of ordered){n.dx=previous&&Math.abs(n.y-previous.y)<=5&&previous.dx===0?(g.up?13:-13):0;previous=n;}g.stemX=g.x+(g.up?6.5:-6.5);
+    const ordered=[...g.notes].sort((a,b)=>g.up?b.y-a.y:a.y-b.y);let previous=null;for(const n of ordered){n.dx=previous&&Math.abs(n.y-previous.y)<=5&&previous.dx===0?(g.up?13:-13):0;previous=n;}g.stemX=g.x+(g.grace?4.3:g.up?6.5:-6.5);
     const accCols=[];for(const n of [...g.notes].sort((a,b)=>a.y-b.y)){if(n.midi==null)continue;const altered=black.includes(n.midi%12);n.accidental=altered?(flat?'♭':'♯'):alterations.get(n.y)?'♮':null;alterations.set(n.y,altered);if(!n.accidental)continue;let col=accCols.findIndex(y=>n.y-y>=26);if(col<0)col=accCols.length;accCols[col]=n.y;n.accX=g.x+Math.min(0,...g.notes.map(n=>n.dx))-18-col*11;}
   }
   const sounding=list.filter(g=>!g.rest),min=Math.min(-8,...sounding.flatMap(g=>[g.min-8,g.base<4?g.end-10:g.min-8])),max=Math.max(48,...sounding.flatMap(g=>[g.max+8,g.base<4?g.end+10:g.max+8]));
@@ -43,16 +45,18 @@ function prepareHand(groups,hand,clef,flat,anchors){
 function drawHand(data,staffY,hand,options,flat){
   let svg=`<g class="staff-notes ${options.hand&&options.hand!=='both'&&options.hand!==hand?'muted-note':''}" transform="translate(0 ${staffY})">`;
   for(const g of data.list){
-    svg+=`<g class="chord" data-beat="${g.beat}" data-duration="${g.duration}" data-hand="${hand}">`;
+    svg+=`<g class="chord${g.grace?' grace-note':''}" data-beat="${g.beat}" data-duration="${g.duration}" data-hand="${hand}">`;
     if(g.rest){const y=data.list.some(o=>o!==g&&!o.rest&&o.beat<=g.beat&&o.beat+o.duration>g.beat)?(g.lane===0?-9:57):20,glyph=g.base>=4?'𝄻':g.base>=2?'𝄼':g.base>=1?'𝄽':g.base>=.5?'𝄾':'𝄿';svg+=text(g.x,y+8,glyph,'class="rest" text-anchor="middle"');}
     else{
       const ledgers=new Map();for(const n of g.notes){for(let y=-10;y>=n.y-1;y-=10){const a=ledgers.get(y)||[Infinity,-Infinity];ledgers.set(y,[Math.min(a[0],g.x+n.dx-11),Math.max(a[1],g.x+n.dx+11)]);}for(let y=50;y<=n.y+1;y+=10){const a=ledgers.get(y)||[Infinity,-Infinity];ledgers.set(y,[Math.min(a[0],g.x+n.dx-11),Math.max(a[1],g.x+n.dx+11)]);}}for(const [y,[a,b]] of ledgers)svg+=line(a,y,b,y,'class="ledger"');
-      for(const n of g.notes){const x=g.x+n.dx;svg+=`<ellipse class="note-head" data-note="${esc(n.id)}" cx="${x}" cy="${n.y}" rx="${g.base>=4?8.5:7.1}" ry="4.7" transform="rotate(-18 ${x} ${n.y})" fill="${g.base>=2?'white':'currentColor'}" stroke="currentColor" stroke-width="1.6"/>`;if(n.accX!=null)svg+=text(n.accX,n.y+6,n.accidental,'class="accidental" text-anchor="middle"');}
+      for(const n of g.notes){const x=g.x+n.dx;svg+=`<ellipse class="note-head" data-note="${esc(n.id)}" cx="${x}" cy="${n.y}" rx="${g.grace?4.6:g.base>=4?8.5:7.1}" ry="${g.grace?3.1:4.7}" transform="rotate(-18 ${x} ${n.y})" fill="${g.base>=2?'white':'currentColor'}" stroke="currentColor" stroke-width="1.6"/>`;if(n.accX!=null)svg+=text(n.accX,n.y+6,n.accidental,'class="accidental" text-anchor="middle"');}
       if(g.base<4){svg+=line(g.stemX,g.up?g.max:g.min,g.stemX,g.end,'class="note-stem"');if(!g.beamed)for(let f=0;f<g.flags;f++){const dir=g.up?1:-1,y=g.end+dir*f*8;svg+=`<path class="note-flag" d="M${g.stemX} ${y} c17 ${dir*7} 17 ${dir*18} 5 ${dir*25} c6 ${-dir*12} 0 ${-dir*15} -5 ${-dir*17} Z"/>`;}}
     }
     if(g.dotted){const ys=new Set();for(const n of g.notes){let y=n.y%10===0?n.y-5:n.y;while(ys.has(y))y-=10;ys.add(y);svg+=`<circle class="augmentation-dot" cx="${g.x+Math.max(...g.notes.map(n=>n.dx??0))+16}" cy="${y}" r="2.1"/>`;}}
+    if(g.unknown)svg+=text(g.x,g.min-42,'音価確認','class="tuplet-label" text-anchor="middle"');
     svg+='</g>';
   }
+  for(const g of data.list)for(const n of g.notes.filter(n=>n.tieTo)){const next=data.list.find(o=>o.beat>g.beat&&o.notes.some(p=>p.sourceId===n.sourceId&&p.tieFrom));if(next){const end=next.notes.find(p=>p.sourceId===n.sourceId),y=n.y+(g.up?8:-8),bend=g.up?12:-12;svg+=`<path class="note-tie" d="M${g.x+n.dx+5} ${y} Q${(g.x+next.x)/2} ${y+bend} ${next.x+end.dx-5} ${y}" fill="none" stroke="currentColor" stroke-width="1.5"/>`;}}
   for(const run of data.beamGroups){const dir=run[0].up?1:-1;for(let level=0;level<Math.max(...run.map(g=>g.flags));level++){for(let i=0;i<run.length-1;i++)if(run[i].flags>level&&run[i+1].flags>level)svg+=line(run[i].stemX,run[i].end+dir*level*8,run[i+1].stemX,run[i+1].end+dir*level*8,'class="note-beam"');for(let i=0;i<run.length;i++)if(run[i].flags>level&&!(run[i-1]?.flags>level)&&!(run[i+1]?.flags>level)){const g=run[i],hook=i===run.length-1?-10:10;svg+=line(g.stemX,g.end+dir*level*8,g.stemX+hook,g.end+dir*level*8,'class="note-beam"');}}}
   // A visible tuplet number preserves the distinction from ordinary eighths/sixteenths.
   for(const lane of new Set(data.list.map(g=>g.lane))){const tuplets=data.list.filter(g=>g.lane===lane&&g.tuplet);let run=[];const flush=()=>{if(run.length){const a=run[0],b=run.at(-1),count=run.length%6===0?'6':'3',y=data.min-9;svg+=line(a.x-7,y+4,b.x+7,y+4,'class="tuplet-bracket"')+text((a.x+b.x)/2,y+8,count,'class="tuplet-label" text-anchor="middle"');run=[];}};for(const g of tuplets){const p=run.at(-1);if(p&&(!near(p.beat+p.duration,g.beat)||run.length>=6||p.base!==g.base||Math.floor((p.beat+.00001)/Math.max(1,g.base*2))!==Math.floor((g.beat+.00001)/Math.max(1,g.base*2))))flush();run.push(g);}flush();}
