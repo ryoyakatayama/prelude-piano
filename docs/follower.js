@@ -1,3 +1,4 @@
+import {setAudioSession} from './audio.js';
 import {timeline,noteName} from './core.js';
 // YIN's difference/CMND estimator. Single fundamental only; polyphonic piano is not promised.
 export function detectPitch(buffer,sampleRate){
@@ -28,6 +29,7 @@ export class MicrophoneFollower {
  async start(score,hand,beat,bounds){this.stop();const generation=++this.generation;
    if(!navigator.mediaDevices?.getUserMedia)throw Error('マイク追従はHTTPSのSafariで開いてください。');
    try{
+    setAudioSession('auto');
     const C=window.AudioContext||window.webkitAudioContext;const context=new C();this.ctx=context;await context.resume();
     const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false},video:false});
     if(generation!==this.generation){stream.getTracks().forEach(t=>t.stop());await context.close();return;}

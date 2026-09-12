@@ -7,7 +7,7 @@ const paths={
  download:'<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>',
  upload:'<path d="M12 16V4m-5 5 5-5 5 5M4 16v5h16v-5"/>',
  check:'<path d="m5 12 4 4L19 6"/>',
- play:'<path d="m8 5 11 7-11 7z" fill="currentColor" stroke="none"/>',
+ play:'<path d="m8 5 12 7-12 7z" fill="currentColor" stroke="none"/>',
  pause:'<path d="M8 5v14m8-14v14" stroke-width="4"/>',
  back:'<path d="M5 5v14m14-14L8 12l11 7z"/>',
  rewind:'<path d="m12 5-8 7 8 7zm9 0-8 7 8 7z"/>',
