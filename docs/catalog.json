@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "vault": "./vault.json",
   "tracks": [
     {
       "id": "joy",
@@ -7,9 +8,12 @@
       "composer": "L. van Beethoven",
       "tempo": 88,
       "measures": 16,
-      "bytes": 19311,
-      "file": "./tracks/joy.piano.json",
-      "revision": "9ef2eb4316b8"
+      "bytes": 12448,
+      "audioBytes": 2596116,
+      "file": "./tracks/joy.piano.enc.json",
+      "audioFile": "./tracks/joy.wav.enc.json",
+      "encrypted": true,
+      "revision": "e5649a389bb3"
     },
     {
       "id": "scale",
@@ -17,9 +21,12 @@
       "composer": "Prélude オリジナル練習曲",
       "tempo": 72,
       "measures": 8,
-      "bytes": 9621,
-      "file": "./tracks/scale.piano.json",
-      "revision": "742c9b883caf"
+      "bytes": 6717,
+      "audioBytes": 1598329,
+      "file": "./tracks/scale.piano.enc.json",
+      "audioFile": "./tracks/scale.wav.enc.json",
+      "encrypted": true,
+      "revision": "d0944bb9894a"
     }
   ]
 }
