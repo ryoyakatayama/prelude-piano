@@ -2,7 +2,7 @@
 
 iPad / Safariで使う、端末内保存に対応したピアノ練習PWAです。GitHub Pagesに静的ファイルだけを公開します。データベース、APIサーバー、APIキー、CDN、アカウント登録は不要です。
 
-公開予定URL: `https://ryoyakatayama.github.io/prelude-piano/`
+公開URL: [Préludeを開く](https://ryoyakatayama.github.io/prelude-piano/)
 
 ## 使い始める
 

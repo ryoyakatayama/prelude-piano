@@ -27,4 +27,13 @@
 
 ## 公開
 
-公開リポジトリ ryoyakatayama/prelude-piano はユーザーの明示承認を受けて作成済み。GitHub Pages公開と公開URLでの検証はアップロード完了後に行います。
+2026-09-12、ユーザーの明示承認を受けて公開リポジトリ ryoyakatayama/prelude-piano にアップロードし、GitHub Pagesで公開しました。
+
+- 公開URL: https://ryoyakatayama.github.io/prelude-piano/
+- GitHub Actions: https://github.com/ryoyakatayama/prelude-piano/actions/runs/34680715626 （Success、23秒）。テスト・資産生成・チェック・デプロイを完了。
+- 公開リポジトリを取得し、35ファイルの内容がローカル成果物と一致することを確認（テキストの改行コード差を除外）。
+- 公開URLでサンプル2曲の一覧、曲のダウンロード、楽譜表示、再生カーソルの進行を確認。
+- 公開URLでBつまみを4小節から2小節へドラッグし、選択範囲・数値の反映を確認。
+- 公開URLで曲を端末から削除し、GitHub原本の一覧と再ダウンロード操作が残ることを確認。
+- 公開HTMLのnoindex指定と「オフライン準備完了」を確認。実際のオフライン再読み込みは前述のローカルHTTPサーバー停止で検証。
+- GitHub側に公式ActionsのNode.js 20ランタイムに関する非致命的な移行警告がありました。Node.js 24への自動切替で全ステップは成功しています。
