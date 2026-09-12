@@ -47,6 +47,12 @@ export function validateScore(input) {
       if (n.finger != null && !(Number.isInteger(n.finger) && n.finger>=1 && n.finger<=5)) throw Error('運指は1〜5にしてください。');
       if (n.x != null && !(Number.isFinite(n.x) && n.x>=0 && n.x<=1)) throw Error('音符のxは小節範囲内の0〜1です。');
       if (n.velocity != null && !(Number.isFinite(n.velocity) && n.velocity>0 && n.velocity<=1)) throw Error('強さは0より大きく1以下です。');
+      if (n.notation != null) {
+        const p=n.notation;
+        if (!p || !Array.isArray(p.durations) || !p.durations.length || p.durations.length>16 || !p.durations.every(d=>Number.isFinite(d)&&d>=1/64&&d<=32) || (p.grace!=null&&typeof p.grace!=='boolean')) throw Error('記譜用の音価を確認してください。');
+        if (p.grace && (n.midi===null || p.durations.length!==1)) throw Error('装飾音には1つの記譜音価を指定してください。');
+        if (p.durations.length>1 && Math.abs(p.durations.reduce((a,b)=>a+b,0)-n.duration)>.00001) throw Error('タイの合計音価が再生時間と一致しません。');
+      }
     }
     m.notes.sort((a,b)=>a.beat-b.beat || (a.midi??0)-(b.midi??0));
   }
