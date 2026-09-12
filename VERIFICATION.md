@@ -62,3 +62,13 @@
 - 旧配信URLのjoy.piano.json・joy.wav・scale.piano.json・scale.wavは全てHTTP 404。Git履歴は維持。
 - 公開HTMLのnoindexを確認。旧版の更新案内後、タブを閉じて再度開くと拡張版が読み込まれ、「オフライン準備完了」を表示。
 - iPad実機の操作・生ピアノ追従は未実施。768×1024表示と暗号化・オフライン動作は上記の検証用ブラウザで確認済み。
+
+## インストールとiPad音声の改善（2026-09-12）
+
+- ライブラリ、上部ボタン、使い方からインストール可能。対応ブラウザーのネイティブ案内とiPad / Android / PCの手順を用意。iPadの共有アイコン、Apple公式手順、URLコピーをブラウザーで確認。
+- Audio Session APIでは playback を選択。再生タップ内でresumeと無音の初期化を開始し、中断・背景移動後はAudioContextを再生成。マイク利用時はautoへ戻す。
+- 音量スライダーはinputイベントで1%刻みの即時反映。Gainの変更は時定数20msで平滑化し、設定保存をまとめる。ブラウザーで80%→50%の表示・保存を確認。
+- 再生ボタンのネイティブpaddingを解除。48pxのボタンとSVGの中心差はX / Yとも0px。三角形の重心もSVG中心に配置。
+- 確認音の開始、検証用サンプル曲の取り込み・再生 / 停止をブラウザーで確認。
+- 自動テスト19件成功。prepare / check成功。iPad実機のスピーカーからの発音、OSのネイティブインストール完了は未検証。
+- 参考: https://github.com/w3c/audio-session/blob/main/explainer.md 、https://bugs.webkit.org/show_bug.cgi?id=252746 、https://bugs.webkit.org/show_bug.cgi?id=291892 。
