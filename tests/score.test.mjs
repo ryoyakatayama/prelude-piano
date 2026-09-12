@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {validateScore,timeline} from '../docs/core.js';
-import {renderNotation,renderPhotos,chordGroups,durationStyle,updatePlayhead,fitTwoSystems} from '../docs/score.js';
+import {renderNotation,renderPhotos,chordGroups,durationStyle,updatePlayhead,fitTwoSystems,notationLayout} from '../docs/score.js';
 const n=(midi,beat=0,duration=1,hand='right')=>({id:`${hand}-${midi}-${beat}-${duration}`,midi,beat,duration,hand});
 const score=notes=>({title:'Test',composer:'',tempo:80,pages:[],measures:[{beats:4,notes}]});
 test('quarter and eighth triads share one stem, with flags only for an eighth',()=>{
@@ -55,6 +55,19 @@ test('selected measures per system overrides automatic wrapping and retains ever
 
 test('two-system fit accounts for the tallest adjacent pair, labels and spacing',()=>{
  const sizes=[{width:900,height:320},{width:1400,height:500},{width:1100,height:760}],width=720,height=430,z=fitTwoSystems(sizes,width,height);
- assert.ok(z>0&&z<1);for(let i=0;i<sizes.length-1;i++)assert.ok((sizes[i].height*width/sizes[i].width+sizes[i+1].height*width/sizes[i+1].width+48+60)*z<=height);
+ assert.ok(z>0&&z<1);for(let i=0;i<sizes.length-1;i++)assert.ok((sizes[i].height+sizes[i+1].height+48+60)*z<=height);
  assert.equal(fitTwoSystems(sizes,width,2000),1);
+});
+
+test('sparse and dense systems retain identical note scale at every zoom',()=>{
+ const s=score([n(60)]);s.measures.push({beats:4,notes:Array.from({length:16},(_,i)=>n(64,i/4,.25))});
+ const r=renderNotation(s,{width:600,measuresPerSystem:1});assert.notEqual(r.systemSizes[0].width,r.systemSizes[1].width);
+ for(const zoom of [.3,.4,.75,1,2]){const layout=notationLayout(r.systemSizes,zoom,600);layout.systems.forEach((system,i)=>{assert.ok(Math.abs(system.width/r.systemSizes[i].width-zoom)<1e-12);assert.ok(Math.abs(system.height/r.systemSizes[i].height-zoom)<1e-12);});assert.equal(layout.width,Math.max(...layout.systems.map(s=>s.width)));}
+});
+
+test('name and fingering toggles preserve wrapping, note positions and automatic scale',()=>{
+ const s=score([n(60)]);s.measures=Array.from({length:9},(_,i)=>({beats:4,notes:[...Array.from({length:i%3+2},(_,j)=>n(60+j*2,0,2)),n(72,.5,.5)]}));
+ for(const count of [0,1,4,8]){const baseline=renderNotation(s,{width:680,measuresPerSystem:count,names:false,fingers:false});
+  for(const options of [{names:true},{fingers:true},{names:true,fingers:true}]){const r=renderNotation(s,{width:680,measuresPerSystem:count,...options});assert.deepEqual(r.systemSizes,baseline.systemSizes);assert.deepEqual(r.regions,baseline.regions);assert.deepEqual(r.anchors,baseline.anchors);assert.equal(fitTwoSystems(r.systemSizes,680,450),fitTwoSystems(baseline.systemSizes,680,450));assert.ok(!baseline.html.includes('class="note-label"'));if(options.names)assert.ok(r.html.includes('class="note-label"'));}
+ }
 });
