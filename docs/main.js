@@ -2,7 +2,7 @@ import {demoScore,esc,timeline,validateScore,clamp,locate,loopBounds} from './co
 import {installBanner,syncInstallUI,openInstall} from './install.js';
 import {LibraryVault,fetchBoundedJson} from './vault.js';
 import {renderPracticeTemplate} from './views.js';
-import {renderNotation,renderPhotos,updatePlayhead,fitTwoSystems} from './score.js';
+import {renderNotation,renderPhotos,updatePlayhead,fitTwoSystems,notationLayout} from './score.js';
 import {icon} from './icons.js';
 import {installLoopTouch} from './touch-loop.js';
 import {Transport} from './audio.js';
@@ -56,8 +56,10 @@ function drawScore(keepMeasure=false){
  if(!$('#score'))return;const container=$('#score'),pane=$('#sheet-scroll'),style=getComputedStyle(pane),baseWidth=Math.min(1120,pane.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight));
  container.style.minWidth='0';
  if(state.photo){rendered=null;container.innerHTML=renderPhotos(score,state);}else{rendered=renderNotation(score,{...state,width:baseWidth});if(state.fitTwo)state.zoom=fitTwoSystems(rendered.systemSizes,baseWidth,pane.clientHeight-parseFloat(style.paddingTop)-parseFloat(style.paddingBottom));container.innerHTML=rendered.html;}
- container.style.width=baseWidth*state.zoom+'px';container.style.setProperty('--score-scale',state.zoom);
- container.querySelectorAll('.notation-system').forEach((el,i)=>{const s=rendered.systemSizes[i];el.style.containIntrinsicSize='auto '+(s.height*baseWidth*state.zoom/s.width)+'px';});
+ const layout=rendered?notationLayout(rendered.systemSizes,state.zoom,baseWidth):null;
+ container.style.width=(layout?.width??baseWidth*state.zoom)+'px';container.style.setProperty('--score-scale',state.zoom);
+ container.querySelectorAll('.notation-system').forEach((el,i)=>{const s=layout.systems[i];el.style.width=s.width+'px';el.style.containIntrinsicSize='auto '+s.height+'px';});
+ const heading=container.querySelector('.notation-heading');if(heading)heading.style.width=baseWidth*state.zoom+'px';
  $('#fingers').disabled=state.photo;$('#names').disabled=state.photo;syncScoreControls();
  $('.sheet-footer>span').innerHTML=state.photo?'確認用の写真 · ページを切り替えて閲覧':icon('repeat')+'A・Bをドラッグして範囲を選択';
  markLoop();lastMeasure=-1;paintPosition();
