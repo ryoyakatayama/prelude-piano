@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {validateScore,timeline} from '../docs/core.js';
-import {renderNotation,renderPhotos,chordGroups,durationStyle,updatePlayhead} from '../docs/score.js';
+import {renderNotation,renderPhotos,chordGroups,durationStyle,updatePlayhead,fitTwoSystems} from '../docs/score.js';
 const n=(midi,beat=0,duration=1,hand='right')=>({id:`${hand}-${midi}-${beat}-${duration}`,midi,beat,duration,hand});
 const score=notes=>({title:'Test',composer:'',tempo:80,pages:[],measures:[{beats:4,notes}]});
 test('quarter and eighth triads share one stem, with flags only for an eighth',()=>{
@@ -45,4 +45,16 @@ test('notation metadata validates tied totals and grace values on import',()=>{
  assert.equal(validateScore(s).measures[0].notes[0].notation.durations.length,2);
  s.measures[0].notes[0].notation.durations=[1,1];assert.throws(()=>validateScore(s),/タイ/);
  s.measures[0].notes[0].notation={durations:[0],grace:true};assert.throws(()=>validateScore(s),/記譜/);
+});
+
+test('selected measures per system overrides automatic wrapping and retains every measure',()=>{
+ const s=score([n(60)]);s.measures=Array.from({length:11},(_,i)=>({beats:4,notes:[n(60+i),n(64+i,.5,.5)]}));const before=JSON.stringify(s);
+ for(const count of [1,2,3,4,6,8]){const r=renderNotation(s,{width:320,measuresPerSystem:count});assert.equal(r.systemSizes.length,Math.ceil(11/count));r.regions.forEach((m,i)=>assert.equal(m.system,Math.floor(i/count)));assert.ok(!r.html.includes('min-width:'));}
+ assert.equal(JSON.stringify(s),before);
+});
+
+test('two-system fit accounts for the tallest adjacent pair, labels and spacing',()=>{
+ const sizes=[{width:900,height:320},{width:1400,height:500},{width:1100,height:760}],width=720,height=430,z=fitTwoSystems(sizes,width,height);
+ assert.ok(z>0&&z<1);for(let i=0;i<sizes.length-1;i++)assert.ok((sizes[i].height*width/sizes[i].width+sizes[i+1].height*width/sizes[i+1].width+48+60)*z<=height);
+ assert.equal(fitTwoSystems(sizes,width,2000),1);
 });

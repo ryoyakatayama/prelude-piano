@@ -65,20 +65,26 @@ function drawHand(data,staffY,hand,options,flat){
   return svg+'</g>';
 }
 export function renderNotation(score,options={}){
-  const flat=/[♭b]/.test((score.key||'').split(' ')[0]),available=clamp(options.width||1000,320,1120),margin=65;
+  const flat=/[♭b]/.test((score.key||'').split(' ')[0]),available=clamp(options.width||1000,240,1120),margin=65,fixed=Number.isInteger(options.measuresPerSystem)&&options.measuresPerSystem>=1&&options.measuresPerSystem<=8?options.measuresPerSystem:0;
   const measures=score.measures.map((m,index)=>{const groups=chordGroups(m);return {m,index,groups,...columns(m,groups,options)};}),systems=[];let row=[],used=margin+18;
-  for(const m of measures){if(row.length&&(used+m.minWidth>available||row.length>=4)){systems.push(row);row=[];used=margin+18;}row.push(m);used+=m.minWidth;}if(row.length)systems.push(row);
+  for(const m of measures){if(row.length&&(fixed?row.length>=fixed:used+m.minWidth>available||row.length>=4)){systems.push(row);row=[];used=margin+18;}row.push(m);used+=m.minWidth;}if(row.length)systems.push(row);
   let html=`<div class="notation-heading"><div class="sheet-title">${esc(score.title)}</div><div class="sheet-composer">${esc(score.composer)}</div><div class="sheet-tempo">♩ = ${options.tempo??score.tempo}</div></div>`;
   const regions=[],anchors=[],systemSizes=[];
   systems.forEach((items,system)=>{
     const minimum=margin+18+items.reduce((sum,m)=>sum+m.minWidth,0),width=Math.max(available,minimum),extra=(width-minimum)/items.length,leftPitches=items.flatMap(o=>o.m.notes.filter(n=>n.hand==='left'&&n.midi!=null).map(n=>n.midi)).sort((a,b)=>a-b),leftClef=(leftPitches[Math.floor(leftPitches.length/2)]??48)>=60?'treble':'bass';let x=margin;
     for(const item of items){const mw=item.minWidth+extra,stretch=(mw-58)/item.gaps.reduce((a,b)=>a+b,0);let nx=x+42;item.x=x;item.width=mw;const a=item.beats.map((beat,i)=>{const out=[beat,nx];nx+=item.gaps[i]*stretch;return out;});a.push([item.m.beats,x+mw-12]);anchors[item.index]=a;item.right=prepareHand(item.groups,'right','treble',flat,a);item.left=prepareHand(item.groups,'left',leftClef,flat,a);x+=mw;}
     const extents=hand=>({min:Math.min(...items.map(o=>o[hand].min))-(options.fingers?40:22),max:Math.max(...items.map(o=>o[hand].max+(options.names?20+15*Math.max(0,...o[hand].list.map(g=>g.notes.length)):0)))}),right=extents('right'),left=extents('left'),top=26-right.min,bass=top+right.max+32-left.min,height=bass+left.max+38;
-    systemSizes.push({width,height});html+=`<div class="notation-system" style="content-visibility:auto;contain-intrinsic-size:auto ${height}px"><svg class="notation" data-system="${system}" viewBox="0 0 ${width} ${height}" style="min-width:${minimum}px" role="img" aria-label="${items[0].index+1}〜${items.at(-1).index+1}小節">`;
+    systemSizes.push({width,height});html+=`<div class="notation-system" style="content-visibility:auto;contain-intrinsic-size:auto ${height}px"><svg class="notation" data-system="${system}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${items[0].index+1}〜${items.at(-1).index+1}小節">`;
     html+=text(11,top+34,'𝄞','class="clef"')+text(11,bass+(leftClef==='treble'?34:30),leftClef==='treble'?'𝄞':'𝄢',`class="clef ${leftClef==='bass'?'bass':''}"`)+line(margin-6,top,margin-6,bass+40,'class="bar-line"');
     for(const item of items){const r={x:item.x,y:5,width:item.width,height:height-15,system};regions[item.index]=r;html+=`<g class="score-measure" data-measure="${item.index}"><rect class="measure-hit" x="${r.x}" y="${r.y}" width="${r.width}" height="${r.height}" rx="5"/>`+text(item.x+5,20,item.index+1,'class="measure-number"');for(const staff of [top,bass])for(let l=0;l<5;l++)html+=line(item.x,staff+l*10,item.x+item.width,staff+l*10,'class="staff-line"');html+=line(item.x+item.width,top,item.x+item.width,bass+40,'class="bar-line"')+drawHand(item.right,top,'right',options,flat)+drawHand(item.left,bass,'left',options,flat)+'</g>';}
     html+='<g class="notation-playhead" style="display:none" pointer-events="none"><rect class="playhead-shade"/><line class="playhead-line"/><circle r="5" class="playhead-dot"/></g></svg></div>';
   });return {html,regions,anchors,systemSizes};
+}
+// Fit every adjacent pair, including heading/row spacing; controls keep their touch size.
+export function fitTwoSystems(sizes,width,height){
+  if(!sizes.length||width<=0||height<=0)return 1;
+  const rows=sizes.map(s=>s.height*width/s.width+24),largest=Math.max(...rows.map((h,i)=>h+(rows[i+1]??0)))+60;
+  return Math.max(.1,Math.min(1,Math.floor(height/largest*100)/100));
 }
 // One reference page at a time: no per-note SVG, hit regions, or playback overlays.
 export function renderPhotos(score,options={}){
