@@ -4,3 +4,9 @@ node_modules/
 *.log
 .env*
 !.env.example
+*.piano.json
+*.wav
+*.prelude-backup.json
+*.pem
+*.pkcs8
+private/

@@ -75,12 +75,17 @@
 
 ## 曲を追加
 
-`docs/tracks/<id>.piano.json` を保存後:
+採譜用の `<id>.piano.json` は公開リポジトリの外（例: このタスクの `work/source-scores/`）に保存します。パスワードを聞かずに、`docs/vault.json` の公開鍵で暗号化できます。
 
 ```sh
-node scripts/prepare.mjs --audio
+node scripts/protect.mjs ../../work/source-scores
+node scripts/prepare.mjs
 node --test tests/*.test.mjs
 node scripts/check.mjs
 ```
 
 カタログには曲ごとのSHA-256の短縮リビジョンを含みます。更新された原本はアプリの更新ボタンで取得でき、端末だけの編集を上書きする前に確認します。アプリの保存時に付与される `sourceRevision` と `modifiedAt` は曲本体の採譜情報ではありません。
+
+公開するのは `docs/tracks/<id>.piano.enc.json` と `<id>.wav.enc.json` の対です。音符・写真・音源の中身はAES-256-GCMで暗号化し、曲ごとの鍵はRSA-OAEPで包みます。各ファイルの `metadata`（曲ID・種類・曲名・作曲者・テンポ・小節数）は一覧用に公開され、暗号認証にも含みます。その他の平文フィールドは検証で拒否します。暗号化済みファイルをアプリから受け取った場合はそのままtracksへ置き、prepare/checkを実行します。
+
+`vault.json` の秘密鍵部分は、パスワードからPBKDF2-SHA256（600,000回）で導いた鍵によりAES-GCMで保護されています。設定ファイルを別端末から取得し、同じパスワードで開きます。公開用ファイルに平文パスワードや復号済み秘密鍵を含めません。仕様詳細は `docs/crypto.js` が正本です。
