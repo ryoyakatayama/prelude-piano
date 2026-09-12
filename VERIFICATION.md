@@ -52,4 +52,13 @@
 - 768×1024の表示を確認。ライブラリとパスワード案内に横はみ出しなし。
 - 本番用暗号化ファイルの構造、楽譜・音源の対、カタログ参照、公開対象に平文の曲・WAVがないことをcheckで確認。
 
-この節はローカル検証の記録です。公開側の検証結果はデプロイ後に追記します。
+## 1.1 公開側の検証（2026-09-12）
+
+- PR: https://github.com/ryoyakatayama/prelude-piano/pull/1 。全43ファイルがローカル成果物と一致することを確認し、PRのvalidate成功後にmainへマージ。
+- 公開コミット: `95f48399a395000270d7a388c868294921f7f99b`。
+- GitHub Actions: https://github.com/ryoyakatayama/prelude-piano/actions/runs/34683099356 （Success、28秒）。validate・deployとも成功。
+- 公開URLで「パスワードで保護」の曲一覧2件、ダウンロード時の入力画面、「この端末で覚える」、キャンセルを確認。
+- vault.json・catalog.json・main.js・crypto.js・vault.jsの公開内容が成果物と一致。本番パスワードは取得せず、公開先での復号はユーザーの入力で行う。
+- 旧配信URLのjoy.piano.json・joy.wav・scale.piano.json・scale.wavは全てHTTP 404。Git履歴は維持。
+- 公開HTMLのnoindexを確認。旧版の更新案内後、タブを閉じて再度開くと拡張版が読み込まれ、「オフライン準備完了」を表示。
+- iPad実機の操作・生ピアノ追従は未実施。768×1024表示と暗号化・オフライン動作は上記の検証用ブラウザで確認済み。
